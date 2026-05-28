@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="실시간 날씨 정보와 상세한 대기질, 생활 지수 및 예보를 제공하는 현대적인 날씨 서비스입니다.">
+  <title>SkyPulse | 실시간 날씨 및 대기질 서비스</title>
+  
+  <!-- Google Fonts: Plus Jakarta Sans for a premium modern feel -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons for clean, professional iconography -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Core Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="weather-clear-day"> <!-- Dynamic class for background animation based on weather -->
+
+  <!-- Animated Background Elements -->
+  <div class="bg-wrapper">
+    <div class="bg-gradient-circle bg-circle-1"></div>
+    <div class="bg-gradient-circle bg-circle-2"></div>
+    <div class="bg-effect-layer"></div>
+  </div>
+
+  <div class="app-container">
+    <!-- Header Area -->
+    <header class="app-header">
+      <div class="logo-area">
+        <div class="logo-icon-wrapper">
+          <i data-lucide="cloud-sun" class="logo-icon"></i>
+        </div>
+        <div class="logo-text">
+          <h1>SkyPulse</h1>
+          <p class="subtitle">실시간 날씨 & 라이프 지수</p>
+        </div>
+      </div>
+      
+      <!-- Search & Controls -->
+      <div class="controls-area">
+        <div class="search-container">
+          <div class="search-input-wrapper">
+            <i data-lucide="search" class="search-icon"></i>
+            <input type="text" id="city-search" placeholder="도시명 검색 (예: 서울, Tokyo, Paris)..." autocomplete="off">
+            <button id="gps-btn" title="내 위치 날씨 보기" aria-label="내 위치 날씨 보기">
+              <i data-lucide="map-pin"></i>
+            </button>
+          </div>
+          <!-- Search Suggestion Dropdown -->
+          <div id="search-suggestions" class="suggestions-dropdown hidden"></div>
+        </div>
+        
+        <!-- Unit Toggle -->
+        <div class="unit-toggle-wrapper">
+          <span class="unit-label">°C</span>
+          <label class="switch">
+            <input type="checkbox" id="unit-toggle">
+            <span class="slider round"></span>
+          </label>
+          <span class="unit-label">°F</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Favorite Cities Bar -->
+    <section class="favorites-section">
+      <div class="favorites-header">
+        <i data-lucide="star" class="favorites-icon"></i>
+        <h2>즐겨찾는 도시</h2>
+      </div>
+      <div class="favorites-container" id="favorites-list">
+        <!-- Dynamic favorites will be loaded here -->
+        <p class="no-favorites">즐겨찾는 도시가 없습니다. 날씨 카드에서 별을 눌러 추가해보세요!</p>
+      </div>
+    </section>
+
+    <!-- Main Content Layout Grid -->
+    <main class="dashboard-grid">
+      
+      <!-- Left/Main Panel (Current Weather, Brief, Hourly) -->
+      <div class="main-panel">
+        
+        <!-- Current Weather Card -->
+        <section class="card current-weather-card" id="current-weather-card">
+          <div class="card-header-actions">
+            <span id="current-time">00:00</span>
+            <button id="add-favorite-btn" class="favorite-btn" title="즐겨찾기 추가/해제" aria-label="즐겨찾기 추가/해제">
+              <i data-lucide="star"></i>
+            </button>
+          </div>
+          
+          <div class="weather-main-info">
+            <div class="weather-text-info">
+              <h2 id="location-name">도시 정보를 불러오는 중...</h2>
+              <p id="weather-description">--</p>
+              <div class="temp-display">
+                <span id="current-temp" class="temp-val">--</span>
+                <span class="temp-unit">°C</span>
+              </div>
+            </div>
+            
+            <div class="weather-visual-info">
+              <div class="weather-icon-large-wrapper">
+                <div id="weather-icon-large">
+                  <i data-lucide="cloud-lightning" class="animated-icon"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="weather-ranges">
+            <span>최저: <strong id="today-min-temp">--°</strong></span>
+            <span class="range-divider">|</span>
+            <span>최고: <strong id="today-max-temp">--°</strong></span>
+          </div>
+        </section>
+
+        <!-- AI Assistant Weather Briefing Card -->
+        <section class="card assistant-card">
+          <div class="assistant-avatar">
+            <div class="avatar-ring"></div>
+            <i data-lucide="sparkles" class="assistant-icon"></i>
+          </div>
+          <div class="assistant-content">
+            <h3 class="assistant-title">SkyPulse 브리핑</h3>
+            <p id="assistant-briefing">데이터를 불러오는 중입니다. 잠시만 기다려주세요...</p>
+          </div>
+        </section>
+
+        <!-- Hourly Forecast Section -->
+        <section class="card hourly-forecast-card">
+          <div class="section-title-wrapper">
+            <i data-lucide="clock" class="section-icon"></i>
+            <h3>시간대별 예보 (24시간)</h3>
+          </div>
+          <div class="hourly-forecast-container" id="hourly-forecast-list">
+            <!-- Hourly items load here -->
+          </div>
+        </section>
+
+      </div>
+
+      <!-- Right Panel (Detailed Metrics & Air Quality) -->
+      <div class="details-panel">
+        
+        <!-- Grid of Detailed Weather Metrics -->
+        <div class="metrics-grid">
+          
+          <!-- Apparent Temp -->
+          <div class="card metric-card">
+            <div class="metric-header">
+              <span class="metric-title">체감 온도</span>
+              <i data-lucide="thermometer" class="metric-icon"></i>
+            </div>
+            <div class="metric-value-wrapper">
+              <span id="apparent-temp" class="metric-value">--°</span>
+            </div>
+            <div class="metric-footer" id="apparent-temp-sub">실제 온도와 차이가 있습니다.</div>
+          </div>
+
+          <!-- Humidity -->
+          <div class="card metric-card">
+            <div class="metric-header">
+              <span class="metric-title">습도</span>
+              <i data-lucide="droplets" class="metric-icon"></i>
+            </div>
+            <div class="metric-value-wrapper">
+              <span id="humidity-val" class="metric-value">--%</span>
+            </div>
+            <div class="metric-progress-bar">
+              <div class="progress" id="humidity-progress" style="width: 0%"></div>
+            </div>
+            <div class="metric-footer" id="humidity-sub">--</div>
+          </div>
+
+          <!-- Wind -->
+          <div class="card metric-card">
+            <div class="metric-header">
+              <span class="metric-title">바람</span>
+              <i data-lucide="wind" class="metric-icon"></i>
+            </div>
+            <div class="metric-value-wrapper wind-val-wrapper">
+              <span id="wind-speed" class="metric-value">-- m/s</span>
+              <div class="wind-compass">
+                <i data-lucide="navigation" id="wind-arrow"></i>
+              </div>
+            </div>
+            <div class="metric-footer" id="wind-direction-text">--풍</div>
+          </div>
+
+          <!-- UV Index -->
+          <div class="card metric-card">
+            <div class="metric-header">
+              <span class="metric-title">자외선 지수</span>
+              <i data-lucide="sun" class="metric-icon"></i>
+            </div>
+            <div class="metric-value-wrapper">
+              <span id="uv-index" class="metric-value">--</span>
+              <span id="uv-status" class="badge">--</span>
+            </div>
+            <div class="metric-progress-bar uv-bar">
+              <div class="progress" id="uv-progress" style="width: 0%"></div>
+            </div>
+            <div class="metric-footer" id="uv-advice">--</div>
+          </div>
+
+          <!-- Air Quality Card (AQI, PM2.5, PM10) -->
+          <div class="card metric-card col-span-2 aqi-card">
+            <div class="metric-header">
+              <span class="metric-title">대기질 및 미세먼지</span>
+              <i data-lucide="activity" class="metric-icon"></i>
+            </div>
+            <div class="aqi-content">
+              <div class="aqi-score-section">
+                <span class="aqi-label">유럽 표준 AQI</span>
+                <span id="aqi-value" class="aqi-value">--</span>
+                <span id="aqi-status" class="badge">대기 상태 정보 없음</span>
+              </div>
+              <div class="aqi-particles-section">
+                <div class="particle-item">
+                  <span class="particle-name">초미세먼지 (PM<sub>2.5</sub>)</span>
+                  <div class="particle-value-group">
+                    <span id="pm25-val" class="particle-value">--</span>
+                    <span class="particle-unit">µg/m³</span>
+                  </div>
+                  <span id="pm25-status" class="particle-badge">--</span>
+                </div>
+                <div class="particle-item">
+                  <span class="particle-name">미세먼지 (PM<sub>10</sub>)</span>
+                  <div class="particle-value-group">
+                    <span id="pm10-val" class="particle-value">--</span>
+                    <span class="particle-unit">µg/m³</span>
+                  </div>
+                  <span id="pm10-status" class="particle-badge">--</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sunrise & Sunset -->
+          <div class="card metric-card col-span-2 sun-card">
+            <div class="metric-header">
+              <span class="metric-title">일출 & 일몰</span>
+              <i data-lucide="sunset" class="metric-icon"></i>
+            </div>
+            <div class="sun-times-wrapper">
+              <div class="sun-time-box">
+                <i data-lucide="sunrise" class="sun-icon rise"></i>
+                <div>
+                  <span class="sun-label">일출</span>
+                  <span id="sunrise-time" class="sun-time">00:00</span>
+                </div>
+              </div>
+              <div class="sun-path-container">
+                <div class="sun-path-arch">
+                  <div class="sun-path-progress" id="sun-path-progress" style="width: 0%;"></div>
+                  <div class="sun-path-node" id="sun-path-node" style="left: 0%; bottom: 0%;">
+                    <i data-lucide="sun"></i>
+                  </div>
+                </div>
+              </div>
+              <div class="sun-time-box">
+                <i data-lucide="sunset" class="sun-icon set"></i>
+                <div>
+                  <span class="sun-label">일몰</span>
+                  <span id="sunset-time" class="sun-time">00:00</span>
+                </div>
+              </div>
+            </div>
+            <div class="metric-footer text-center" id="sun-duration-sub">--</div>
+          </div>
+
+          <!-- Life Comfort Indices -->
+          <div class="card metric-card col-span-2 life-index-card">
+            <div class="metric-header">
+              <span class="metric-title">오늘의 생활 지수</span>
+              <i data-lucide="smile" class="metric-icon"></i>
+            </div>
+            <div class="life-indices-container">
+              <div class="life-item">
+                <div class="life-icon-circle car-wash">
+                  <i data-lucide="car"></i>
+                </div>
+                <span class="life-name">세차 지수</span>
+                <span id="carwash-status" class="life-status">--</span>
+                <span id="carwash-score" class="life-score">--</span>
+              </div>
+              <div class="life-item">
+                <div class="life-icon-circle laundry">
+                  <i data-lucide="shirt"></i>
+                </div>
+                <span class="life-name">빨래 지수</span>
+                <span id="laundry-status" class="life-status">--</span>
+                <span id="laundry-score" class="life-score">--</span>
+              </div>
+              <div class="life-item">
+                <div class="life-icon-circle activity">
+                  <i data-lucide="bike"></i>
+                </div>
+                <span class="life-name">실외 활동</span>
+                <span id="activity-status" class="life-status">--</span>
+                <span id="activity-score" class="life-score">--</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Bottom Panel (7-Day Forecast) -->
+      <div class="forecast-panel col-span-full">
+        <section class="card forecast-card">
+          <div class="section-title-wrapper">
+            <i data-lucide="calendar" class="section-icon"></i>
+            <h3>주간 예보 (7일)</h3>
+          </div>
+          <div class="daily-forecast-container" id="daily-forecast-list">
+            <!-- 7-day items load here -->
+          </div>
+        </section>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <p>© 2026 SkyPulse Weather. Data provided for free by <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a>.</p>
+  </footer>
+
+  <!-- Application Logic -->
+  <script src="app.js"></script>
+</body>
+</html>
